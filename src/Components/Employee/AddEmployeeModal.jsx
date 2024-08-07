@@ -255,7 +255,6 @@ const AddEmployeeModal = ({ employee, onClose, onRefresh }) => {
             <input type="EmpInputtxt" id="employeeId" name="employeeId" value={formData.employeeId}
               onChange={handleChange} disabled={isEditing} />
             {errors.employeeId && <span className="error">{errors.employeeId}</span>}
-            {/* {employeeExistsError && <span className="error">{employeeExistsError}</span>} */}
           </label>
 
           <label htmlFor="firstName">First Name:
@@ -264,36 +263,24 @@ const AddEmployeeModal = ({ employee, onClose, onRefresh }) => {
           </label>
 
           <label htmlFor="lastName">Last Name:
-            <input type="EmpInputtxt" id="lastName" name="lastName"
-            value={formData.lastName} onChange={handleChange} />
+            <input type="EmpInputtxt" id="lastName" name="lastName"value={formData.lastName} onChange={handleChange} />
           </label>
 
           <label htmlFor="email">Email:
-            <input type="EmpInputtxt" id="email" name="email"
-            value={formData.email} onChange={handleChange} />
+            <input type="EmpInputtxt" id="email" name="email" value={formData.email} onChange={handleChange} />
             {errors.email && <span className="error">{errors.email}</span>}
             {emailMobileErrors.email && <span className="error">{emailMobileErrors.email}</span>}
           </label>
 
-          <label>
-            Password
+          <label>Password:
             <div className="AddEmpMdlPwdInput">
-              <input
-                type={passwordVisible ? "textd" : "passwordd"}
-                name="passwordHash" 
-                value={formData.passwordHash}
-                onChange={handleChange}
-              />
-              <span
-                className="AddEmpMdlEyeIcon"
-                onClick={() => setPasswordVisible(!passwordVisible)}
-              >
+              <input type={passwordVisible ? "text" : "password"}
+                name="passwordHash" value={formData.passwordHash} onChange={handleChange}/>
+              <span className="AddEmpMdlEyeIcon" onClick={() => setPasswordVisible(!passwordVisible)}>
                 {passwordVisible ? "👁️‍🗨️" : "👁️"}
               </span>
             </div>
-            {errors.passwordHash && (
-              <span className="AddEmpMdlPwdError">{errors.passwordHash}</span>
-            )}
+            {errors.passwordHash && (<span className="AddEmpMdlPwdError">{errors.passwordHash}</span>)}
           </label>
 
           <label htmlFor="mobileNo">Mobile Number:
@@ -309,7 +296,7 @@ const AddEmployeeModal = ({ employee, onClose, onRefresh }) => {
             {errors.dateOfJoining && <span className="error">{errors.dateOfJoining}</span>}
           </label>
 
-          <label htmlFor="projectManagerId">Project Manager:
+          {/* <label htmlFor="projectManagerId">Project Manager:
             <select id="projectManagerId" name="projectManagerId"
               value={formData.projectManagerId} onChange={handleProjectManagerChange} >
               <option value="">Select Project Manager</option>
@@ -319,15 +306,21 @@ const AddEmployeeModal = ({ employee, onClose, onRefresh }) => {
                 </option>
               ))}
             </select>
+          </label> */}
+          <label htmlFor="projectManagerId">Project Manager:
+            <select name="projectManagerId" value={formData.projectManagerId || ""} onChange={handleChange}>
+              <option value="">Select Project Manager</option>
+              {projectManagers.map((pm) => ( <option key={pm.id} value={pm.id}>
+                {pm.firstName} {pm.lastName}</option>
+              ))}
+            </select>
           </label>
 
           <label htmlFor="roleId">Role:
             <select id="roleId" name="roleId" value={formData.roleId} onChange={handleChange}>
               <option value="">Select Role</option>
-              {roles.map(role => (
-              <option key={role.id} value={role.id}>
-                {role.name}
-              </option>
+              {roles.map(role => ( 
+                <option key={role.id} value={role.id}> {role.name}</option>
               ))}
             </select>
             {errors.roleId && <span className="error">{errors.roleId}</span>}
@@ -336,6 +329,7 @@ const AddEmployeeModal = ({ employee, onClose, onRefresh }) => {
           <label> Skill Sets:
             <textarea id="skillSets" name="skillSets" value={formData.skillSets} onChange={handleChange}></textarea>
           </label>
+          
           <button type="submit" className="AddEmpMdlSubmitBtn">
             {isEditing ? 'Save Modifications' : 'Add Employee'}
           </button>
