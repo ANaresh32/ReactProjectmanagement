@@ -21,11 +21,13 @@ export default function TimeSheet() {
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [disabledTabs, setDisabledTabs] = useState([]);
   const [hours, setHours] = useState({});
+  const [revenue, setRevenue] = useState({}); // Add state for revenue if needed
   const userDetails = JSON.parse(localStorage.getItem("sessionData"));
   const [selectedProjectId, setSelectedProjectID] = useState("");
   const [showButtons, setShowButtons] = useState(true);
   const [employees, setEmployees] = useState([]);
   const [disiblebuttons, setDisiblebuttons] = useState(false);
+  const [isUSAUser, setIsUSAUser] = useState(userDetails.employee.role.name === "USA Finance");
 
   const now = new Date();
   const maxDate = new Date(now.getFullYear(), now.getMonth() + 1, 0);
@@ -42,11 +44,8 @@ export default function TimeSheet() {
   }, [projectDetails, selectedTabIndex, selectedDate]);
 
   async function FetchData() {
-    const response = await EmployeeService.GetProjectInfo(
-      userDetails.employee.id
-    );
+    const response = await EmployeeService.GetProjectInfo(userDetails.employee.id);
     const projects = response.item;
-
     setProjectDetails(projects);
   }
 
@@ -57,9 +56,8 @@ export default function TimeSheet() {
   const handleDateChange = async (projectId, date) => {
     const formattedDate = format(date, "MMMM yyyy");
     setSelectedDate(date);
-
     setHours({});
-
+    setRevenue({}); // Clear revenue data
     await GetProjectDeatis(projectId, formattedDate);
   };
 
@@ -70,11 +68,19 @@ export default function TimeSheet() {
     }));
   };
 
+  const handleRevenueChange = (employeeId, value) => {
+    setRevenue((prev) => ({
+      ...prev,
+      [employeeId]: value,
+    }));
+  };
+
   const submitFunction = () => {
     const currentProject = projectDetails[selectedTabIndex];
     const employeeData = currentProject.employees.map((employee) => ({
       employeeId: employee.id,
       hoursWorked: hours[employee.id] || "",
+      revenue: isUSAUser ? revenue[employee.id] || "" : undefined, // Include revenue if USA user
     }));
     return {
       projectId: currentProject.project.id,
@@ -105,7 +111,6 @@ export default function TimeSheet() {
 
   const SubmitFormFunction = async () => {
     const data = submitFunction();
-
     const response = await TimeSheetService.AddNewTimeSheet(
       data,
       userDetails.employee.id,
@@ -130,7 +135,6 @@ export default function TimeSheet() {
   const GetProjectDeatis = async (id, date) => {
     setSelectedProjectID(id);
     const formattedDate = format(date, "MMMM yyyy");
-
     const response = await TimeSheetService.GetTimeSheetDeatils(
       formattedDate,
       id
@@ -148,14 +152,20 @@ export default function TimeSheet() {
     }
 
     const newHours = {};
+    const newRevenue = {}; // Initialize revenue object
     response.item.forEach((each) => {
       newHours[each.employeeId] = each.workingHourse;
+      if (isUSAUser) {
+        newRevenue[each.employeeId] = each.revenue || ""; // Add revenue if USA user
+      }
     });
     setHours(newHours);
+    setRevenue(newRevenue); // Update revenue state
   };
 
   const Resetfunction = (e) => {
     setHours({});
+    setRevenue({}); // Clear revenue data on reset
   };
 
   return (
@@ -177,7 +187,7 @@ export default function TimeSheet() {
               </Tab>
             ))}
           </TabList>
-          {projectDetails.length == 0 ? (
+          {projectDetails.length === 0 ? (
             <div
               style={{ textAlign: "center", color: "black", fontWeight: "600" }}
             >
@@ -218,6 +228,11 @@ export default function TimeSheet() {
                         <th className="" style={{ textAlign: "center" }}>
                           HOURS
                         </th>
+                        {isUSAUser && (
+                          <th className="" style={{ textAlign: "center" }}>
+                            REVENUE
+                          </th>
+                        )}
                       </tr>
                     </thead>
                     <tbody>
@@ -225,180 +240,95 @@ export default function TimeSheet() {
                         <tr>
                           <td></td>
                           <td></td>
-                          <td>No employees in this project</td>
+                          <td style={{ textAlign: "center" }}>No Records Found</td>
                           <td></td>
                           <td></td>
                         </tr>
                       ) : (
-                        project.employees.map((emp, index) => (
-                          <tr key={index}>
-                            <td>
-                              <div
-                                className="d-flex"
-                                style={{ alignItems: "center" }}
-                              >
-                                <div>
-                                  <div className="empName ">
-                                    {`${emp.firstName} ${emp.lastName}`}
-                                  </div>
-                                  <div className="">{emp.email}</div>
-                                </div>
-                              </div>
+                        project.employees.map((employee) => (
+                          <tr key={employee.id}>
+                            <td>{employee.name}</td>
+                            <td>{employee.designation}</td>
+                            <td style={{ textAlign: "center" }}>
+                              {employee.isSubmited ? "Submitted" : "Not Submitted"}
                             </td>
-                            <td>
-                              <div style={{ textAlign: "start" }}>
-                                Designation
-                              </div>
-                              <div
-                                className="role"
-                                style={{ textAlign: "start" }}
-                              ></div>
+                            <td>{employee.role}</td>
+                            <td style={{ textAlign: "center" }}>
+                              <input
+                                type="number"
+                                min="0"
+                                className="form-control"
+                                disabled={employee.isSubmited}
+                                value={hours[employee.id] || ""}
+                                onChange={(e) =>
+                                  handleHoursChange(employee.id, e.target.value)
+                                }
+                              />
                             </td>
-                            <td>
-                              <div
-                                style={{
-                                  backgroundColor:
-                                    emp.employeeStatus === "Active"
-                                      ? "#196e8a"
-                                      : "#ADD8E6",
-                                  borderRadius: "40px",
-                                  color:
-                                    emp.employeeStatus === "Active"
-                                      ? "white"
-                                      : "black",
-                                  textAlign: "center",
-                                }}
-                              >
-                                <span>{emp.employeeStatus}</span>
-                              </div>
-                            </td>
-                            <td>
-                              <div
-                                className="role"
-                                style={{ textAlign: "center" }}
-                              >
-                                {emp.role?.name || ""}
-                              </div>
-                            </td>
-                            <td>
-                              {employees.length > 0 &&
-                              employees.some(
-                                (obj) => obj.employeeId === emp.id
-                              ) ? (
-                                employees
-                                  .filter((obj) => obj.employeeId === emp.id)
-                                  .map((filteredEmployee) => (
-                                    <div key={filteredEmployee.employeeId}>
-                                      {filteredEmployee.isSubmited === true ? (
-                                        <div style={{ textAlign: "center" }}>
-                                          {filteredEmployee.workingHourse}
-                                        </div>
-                                      ) : (
-                                        <div
-                                          style={{
-                                            display: "flex",
-                                            justifyContent: "center",
-                                          }}
-                                        >
-                                          <input
-                                            type="number"
-                                            className="form-control w-50"
-                                            value={hours[emp.id] || ""}
-                                            onChange={(e) =>
-                                              handleHoursChange(
-                                                emp.id,
-                                                e.target.value
-                                              )
-                                            }
-                                          />
-                                        </div>
-                                      )}
-                                    </div>
-                                  ))
-                              ) : (
-                                <div
-                                  style={{
-                                    display: "flex",
-                                    justifyContent: "center",
-                                  }}
-                                >
-                                  <input
-                                    type="number"
-                                    className="form-control w-50"
-                                    value={hours[emp.id] || ""}
-                                    onChange={(e) =>
-                                      handleHoursChange(emp.id, e.target.value)
-                                    }
-                                  />
-                                </div>
-                              )}
-                            </td>
+                            {isUSAUser && (
+                              <td style={{ textAlign: "center" }}>
+                                <input
+                                  type="number"
+                                  min="0"
+                                  className="form-control"
+                                  disabled={employee.isSubmited}
+                                  value={revenue[employee.id] || ""}
+                                  onChange={(e) =>
+                                    handleRevenueChange(employee.id, e.target.value)
+                                  }
+                                />
+                              </td>
+                            )}
                           </tr>
                         ))
                       )}
                     </tbody>
                   </table>
-                  {project.employees.length > 0 && (
-                    <div className="d-flex" style={{ justifyContent: "end" }}>
-                      <div className="me-4">
-                        <button
-                          className="btn btn-primary"
-                          onClick={Resetfunction}
-                          disabled={disiblebuttons}
-                        >
-                          Reset
-                        </button>
-                      </div>
-                      <div className="me-4">
-                        <button
-                          className="btn btn-success"
-                          onClick={SaveForm}
-                          disabled={disiblebuttons}
-                        >
-                          Save
-                        </button>
-                      </div>
-                      <div>
-                        <button
-                          className="form-control"
-                          style={{
-                            backgroundColor: "rgb(25, 110, 138)",
-                            color: "white",
-                          }}
-                          onClick={SubmitFormFunction}
-                          disabled={disiblebuttons}
-                        >
-                          Submit
-                        </button>
-                      </div>
-                    </div>
-                  )}
+                </div>
+
+                <div className="row">
+                  <div className="col">
+                    <button
+                      type="button"
+                      className="btn btn-primary"
+                      onClick={SaveForm}
+                      disabled={disiblebuttons}
+                    >
+                      <IoSaveOutline style={{ marginRight: "5px" }} />
+                      Save
+                    </button>
+                    <button
+                      type="button"
+                      className="btn btn-primary"
+                      onClick={SubmitFormFunction}
+                      disabled={disiblebuttons}
+                    >
+                      Submit
+                    </button>
+                    <button
+                      type="button"
+                      className="btn btn-primary"
+                      onClick={Resetfunction}
+                      disabled={disiblebuttons}
+                    >
+                      <GrPowerReset style={{ marginRight: "5px" }} />
+                      Reset
+                    </button>
+                  </div>
                 </div>
               </TabPanel>
             ))
           )}
         </Tabs>
+        <ToastContainer />
       </div>
-      <ToastContainer position="top-end" autoClose={5000} />
     </div>
   );
 }
 
 const CustomInput = forwardRef(({ value, onClick }, ref) => (
-  <div
-    className="custom-input"
-    onClick={onClick}
-    ref={ref}
-    style={{
-      display: "flex",
-      alignItems: "center",
-      padding: "5px 10px",
-      border: "1px solid #ccc",
-      borderRadius: "4px",
-      cursor: "pointer",
-    }}
-  >
-    <FontAwesomeIcon icon={faCalendar} style={{ marginRight: "5px" }} />
-    <span>{value}</span>
-  </div>
+  <button className="datepicker-button" onClick={onClick} ref={ref}>
+    <FontAwesomeIcon icon={faCalendar} />
+    {value}
+  </button>
 ));

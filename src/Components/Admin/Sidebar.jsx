@@ -45,6 +45,18 @@ const Sidebar = ({ children }) => {
     });
   };
 
+  const usaFinanceMenuItems = [
+    {
+      name: "Project Management",
+      icon: <VscProject />,
+      submenu: [
+        { path: "/Employee/Projects", name: "- All projects" },
+        { path: "/Employee/TimeSheet", name: "- Timesheet" }, // Include Timesheet for USA Finance Team
+      ],
+    },
+  ];
+
+
   const adminMenuItems = [
     {
       name: "Dashboards",
@@ -174,6 +186,8 @@ const Sidebar = ({ children }) => {
       ? adminMenuItems
       : sessionData?.employee?.role?.name === "Project Manager"
       ? ProjectManagerMenuItems
+      : sessionData?.employee?.role?.name === "USA Finance"
+      ? usaFinanceMenuItems
       : employeeMenuItems;
 
   return (

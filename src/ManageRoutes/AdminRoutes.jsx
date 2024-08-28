@@ -9,7 +9,6 @@ import AddProject from "../Components/Admin/Pages/AddProject";
 import { ViewProject } from "../Components/Admin/ViewProject";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import EmployeeDashboard from "../Components/Employee/EmployeeDashboard";
-import InactiveEmployee from "../Components/Employee/InactiveEmployeesModal";
 import Roles from "../Components/Employee/Roles";
 import EmployeeDetails from "../Components/Employee/EmployeeDetails";
 
@@ -32,7 +31,6 @@ export default function AdminRoutes() {
         <Route path="/product" element={<Product />} />
         <Route path="/productList" element={<ProductList />} />
         <Route path="/EmployeeDashboard" element={<EmployeeDashboard />} />
-        <Route path="/InactiveEmployee" element={<InactiveEmployee />} />
         <Route path="/Roles" element={<Roles />} />
         <Route path="/EmployeeDetails" element={<EmployeeDetails />} />
         <Route path="/Employee/Projects" element={<Projects />} />
